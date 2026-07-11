@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
+import FlightValidator from '../../components/booking/FlightValidator';
 
 const AIRPORTS = ['臺灣桃園國際機場','臺北松山機場','臺中國際機場','高雄小港機場','臺南航空站'];
 const VEHICLES = ['sedan','luxury','suv','van','luxury_van','import'];
@@ -12,7 +13,7 @@ const MINUTES = ['00','05','10','15','20','25','30','35','40','45','50','55'];
 export default function BookingPage() {
   const nav = useNavigate();
   const user = useAuthStore(s => s.user);
-  const [tab,setTab] = useState<'pickup'|'sendoff'|'general'>('sendoff');
+  const [tab,setTab] = useState<'pickup'|'sendoff'|'general'>('pickup');
   const [mode,setMode] = useState<'flight'|'time'>('time');
   const [airport,setAirport] = useState(AIRPORTS[0]);
   const [dest,setDest] = useState('');
@@ -49,7 +50,7 @@ export default function BookingPage() {
     nav(`/track/${data.referenceCode}`);
   };
 
-  const tabs=[{key:'sendoff'as const,label:'🛫 送機'},{key:'pickup'as const,label:'🛬 接機'},{key:'general'as const,label:'🚗 一般'}];
+  const tabs=[{key:'pickup'as const,label:'🛬 接機'},{key:'sendoff'as const,label:'🛫 送機'},{key:'general'as const,label:'🚗 一般'}];
 
   return (
     <div className="min-h-screen bg-obsidian">
@@ -71,11 +72,8 @@ export default function BookingPage() {
         <div className="glass-card p-6 space-y-4">
           <div className="flex bg-ash/50 rounded-xl p-1">{tabs.map(t=>(<button key={t.key} onClick={()=>setTab(t.key)} className={`flex-1 py-2.5 text-sm rounded-lg transition-all ${tab===t.key?'bg-gold text-obsidian':'text-mist hover:text-ivory'}`}>{t.label}</button>))}</div>
 
-          {/* Pickup: Airport first */}
-          {tab==='pickup'&&<div><label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">出發地（機場）</label><select value={airport} onChange={e=>setAirport(e.target.value)} className="input-premium w-full">{AIRPORTS.map(a=><option key={a}>{a}</option>)}</select></div>}
-
-          {/* Sendoff/General: Address first */}
-          {(tab==='sendoff'||tab==='general')&&<div>
+          {/* Pickup: Address first */}
+          {(tab==='pickup'||tab==='general')&&<div>
             <label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">出發地</label>
             <input value={dest} onChange={e=>setDest(e.target.value)} className="input-premium w-full" placeholder="地址 1" />
             {addrCount>=2&&<input className="input-premium w-full mt-1.5" placeholder="地址 2" />}
@@ -87,17 +85,20 @@ export default function BookingPage() {
             </div>
           </div>}
 
-          {/* Pickup: Destination */}
-          {tab==='pickup'&&<div>
+          {/* Pickup: Airport destination */}
+          {tab==='pickup'&&<div><label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">目的地（機場）</label><select value={airport} onChange={e=>setAirport(e.target.value)} className="input-premium w-full">{AIRPORTS.map(a=><option key={a}>{a}</option>)}</select></div>}
+
+          {/* Sendoff: Airport first */}
+          {tab==='sendoff'&&<div><label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">出發地（機場）</label><select value={airport} onChange={e=>setAirport(e.target.value)} className="input-premium w-full">{AIRPORTS.map(a=><option key={a}>{a}</option>)}</select></div>}
+
+          {/* Sendoff/General: Address destination */}
+          {(tab==='sendoff'||tab==='general')&&<div>
             <label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">目的地</label>
             <input value={dest} onChange={e=>setDest(e.target.value)} className="input-premium w-full" placeholder="地址 1" />
             {addrCount>=2&&<input className="input-premium w-full mt-1.5" placeholder="地址 2" />}
             {addrCount>=3&&<input className="input-premium w-full mt-1.5" placeholder="地址 3" />}
             {addrCount>=4&&<input className="input-premium w-full mt-1.5" placeholder="地址 4" />}
           </div>}
-
-          {/* Sendoff: Airport after address */}
-          {tab==='sendoff'&&<div><label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">目的地（機場）</label><select value={airport} onChange={e=>setAirport(e.target.value)} className="input-premium w-full">{AIRPORTS.map(a=><option key={a}>{a}</option>)}</select></div>}
 
           {/* General: Destination */}
           {tab==='general'&&<div>
@@ -113,9 +114,13 @@ export default function BookingPage() {
 
           <div><label className="block text-xs text-mist mb-1.5">{tab==='pickup'?(mode==='flight'?'航班日期':'乘車日期'):'乘車日期'}</label></div>
 
-          {/* Date/time */}
-          {tab!=='general'&&<div className="flex gap-3">
-            <div className="flex-1"><label className="block text-xs text-mist mb-1.5">航班編號</label><input value={flightNo} onChange={e=>setFlightNo(e.target.value)} className="input-premium w-full" placeholder="選填" /></div>
+          {/* Flight — 接機用驗證，送機用簡單輸入 */}
+          {tab==='pickup'&&<div className="flex gap-3">
+            <div className="flex-1"><FlightValidator flightNo={flightNo} onChange={setFlightNo} /></div>
+            <div className="w-28"><label className="block text-xs text-mist mb-1.5">航廈</label><select className="input-premium w-full text-sm">{airport.includes('桃園')?<><option>T1</option><option>T2</option><option>T3</option></>:<><option>國內</option><option>國際</option></>}</select></div>
+          </div>}
+          {tab==='sendoff'&&<div className="flex gap-3">
+            <div className="w-28"><label className="block text-xs text-mist mb-1.5">航班編號</label><input value={flightNo} onChange={e=>setFlightNo(e.target.value)} className="input-premium w-full" placeholder="選填" /></div>
             <div className="w-28"><label className="block text-xs text-mist mb-1.5">航廈</label><select className="input-premium w-full text-sm">{airport.includes('桃園')?<><option>T1</option><option>T2</option><option>T3</option></>:<><option>國內</option><option>國際</option></>}</select></div>
           </div>}
 
