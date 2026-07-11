@@ -13,7 +13,7 @@ const MINUTES = ['00','05','10','15','20','25','30','35','40','45','50','55'];
 export default function BookingPage() {
   const nav = useNavigate();
   const user = useAuthStore(s => s.user);
-  const [tab,setTab] = useState<'pickup'|'sendoff'|'general'>('pickup');
+  const [tab,setTab] = useState<'pickup'|'sendoff'|'general'>('sendoff');
   const [mode,setMode] = useState<'flight'|'time'>('time');
   const [airport,setAirport] = useState(AIRPORTS[0]);
   const [dest,setDest] = useState('');
@@ -23,7 +23,7 @@ export default function BookingPage() {
   const [hour,setHour]=useState(()=>String(new Date().getHours()).padStart(2,'0')); const [minute,setMinute]=useState(()=>{const m=new Date().getMinutes();return m<5?'00':String(Math.floor(m/5)*5).padStart(2,'0');});
   const [vehicle,setVehicle]=useState('sedan'); const [passengers,setPassengers]=useState(1); const [luggage,setLuggage]=useState(0);
   const [signboard,setSignboard]=useState(false); const [signboardTitle,setSignboardTitle]=useState(''); const [signboardContent,setSignboardContent]=useState('');
-  const [signboard2,setSignboard2]=useState(false); const [signboard2Title,setSignboard2Title]=useState(''); const [signboard2Content,setSignboard2Content]=useState('');
+  const [signboard2,setSignboard2]=useState(false);
   const [showServices,setShowServices]=useState(false);
   const [addrCount,setAddrCount]=useState(1); const [destAddrCount,setDestAddrCount]=useState(1); const [showContact,setShowContact]=useState(false);
   const [name,setName]=useState(''); const [phone,setPhone]=useState(''); const [email,setEmail]=useState('');
@@ -45,12 +45,12 @@ export default function BookingPage() {
     if(!name) return alert('請填寫姓名');
     if(!phone) return alert('請填寫手機');
     const sched=`${year}-${month}-${day}T${hour}:${minute}:00`;
-    const extras=[signboard?`舉牌:${signboardTitle||''}/${signboardContent||''}`:null,signboard2?`第二組舉牌:${signboard2Title||''}/${signboard2Content||''}`:null].filter(Boolean).join(',');
+    const extras=[signboard?'舉牌':null,signboard2?'第二組舉牌':null].filter(Boolean).join(',');
     const{data}=await api.post('/bookings',{bookingType:tab,pickupAddress:tab==='pickup'?airport:dest,dropoffAddress:tab==='pickup'?dest:airport,flightNumber:flightNo||null,scheduledPickupAt:sched,passengerCount:passengers,luggageCount:luggage,vehicleType:vehicle,paymentMethod:payment,specialRequests:extras||null});
     nav(`/track/${data.referenceCode}`);
   };
 
-  const tabs=[{key:'pickup'as const,label:'🛬 接機'},{key:'sendoff'as const,label:'🛫 送機'},{key:'general'as const,label:'🚗 一般'}];
+  const tabs=[{key:'sendoff'as const,label:'🛫 送機'},{key:'pickup'as const,label:'🛬 接機'},{key:'general'as const,label:'🚗 一般'}];
 
   return (
     <div className="min-h-screen bg-obsidian">
@@ -114,7 +114,7 @@ export default function BookingPage() {
 
           <div><label className="block text-xs text-mist mb-1.5">{tab==='pickup'?(mode==='flight'?'航班日期':'乘車日期'):'乘車日期'}</label></div>
 
-          {/* Flight — 接機依航班才驗證，指定時間用簡單輸入；送機一律簡單輸入 */}
+          {/* Flight — 接機依航班驗證，指定時間/送機簡單輸入 */}
           {tab==='pickup'&&mode==='flight'&&<div className="flex gap-3">
             <div className="flex-1"><FlightValidator flightNo={flightNo} onChange={setFlightNo} /></div>
             <div className="w-28"><label className="block text-xs text-mist mb-1.5">航廈</label><select className="input-premium w-full text-sm">{airport.includes('桃園')?<><option>T1</option><option>T2</option><option>T3</option></>:<><option>國內</option><option>國際</option></>}</select></div>
@@ -126,12 +126,12 @@ export default function BookingPage() {
 
           <div className="grid grid-cols-3 gap-1.5">
             <div><label className="block text-xs text-mist mb-1">年</label><div className="flex items-center bg-charcoal rounded-lg border border-white/5"><button onClick={()=>setYear(y=>y-1)} className="px-2 py-2 text-fog hover:text-ivory text-xs">&larr;</button><span className="flex-1 text-center text-sm font-medium text-ivory">{year}</span><button onClick={()=>setYear(y=>y+1)} className="px-2 py-2 text-fog hover:text-ivory text-xs">&rarr;</button></div></div>
-            <div><label className="block text-xs text-mist mb-1">月</label><select value={month} onChange={e=>setMonth(e.target.value)} className="input-premium w-full text-sm text-center">{Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0')).map(m=><option key={m}>{m}月</option>)}</select></div>
-            <div><label className="block text-xs text-mist mb-1">日</label><select value={day} onChange={e=>setDay(e.target.value)} className="input-premium w-full text-sm text-center">{Array.from({length:31},(_,i)=>String(i+1).padStart(2,'0')).map(d=><option key={d}>{d}日</option>)}</select></div>
+            <div><label className="block text-xs text-mist mb-1">月</label><select value={month} onChange={e=>setMonth(e.target.value)} className="input-premium w-full text-sm text-center">{Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0')).map(m=><option key={m} value={m}>{m}月</option>)}</select></div>
+            <div><label className="block text-xs text-mist mb-1">日</label><select value={day} onChange={e=>setDay(e.target.value)} className="input-premium w-full text-sm text-center">{Array.from({length:31},(_,i)=>String(i+1).padStart(2,'0')).map(d=><option key={d} value={d}>{d}日</option>)}</select></div>
           </div>
           <div className="grid grid-cols-2 gap-1.5">
-            <div><label className="block text-xs text-mist mb-1">時</label><select value={hour} onChange={e=>setHour(e.target.value)} className="input-premium w-full text-sm text-center">{HOURS.map(h=><option key={h}>{h}時</option>)}</select></div>
-            <div><label className="block text-xs text-mist mb-1">分</label><select value={minute} onChange={e=>setMinute(e.target.value)} className="input-premium w-full text-sm text-center">{MINUTES.map(m=><option key={m}>{m}分</option>)}</select></div>
+            <div><label className="block text-xs text-mist mb-1">時</label><select value={hour} onChange={e=>setHour(e.target.value)} className="input-premium w-full text-sm text-center">{HOURS.map(h=><option key={h} value={h}>{h}時</option>)}</select></div>
+            <div><label className="block text-xs text-mist mb-1">分</label><select value={minute} onChange={e=>setMinute(e.target.value)} className="input-premium w-full text-sm text-center">{MINUTES.map(m=><option key={m} value={m}>{m}分</option>)}</select></div>
           </div>
 
           {/* Vehicle */}
@@ -147,7 +147,6 @@ export default function BookingPage() {
             <label className="flex items-center gap-2 text-sm text-ivory/80 mb-1"><input type="checkbox" checked={signboard} onChange={e=>setSignboard(e.target.checked)} className="accent-gold" />舉牌服務 +$200</label>
             {signboard&&<div className="ml-6 space-y-1 mb-1"><input value={signboardTitle} onChange={e=>setSignboardTitle(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌文字主題"/><input value={signboardContent} onChange={e=>setSignboardContent(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌內容"/></div>}
             <label className="flex items-center gap-2 text-sm text-ivory/80 mb-1"><input type="checkbox" checked={signboard2} onChange={e=>setSignboard2(e.target.checked)} className="accent-gold" />第二組舉牌 +$200</label>
-            {signboard2&&<div className="ml-6 space-y-1 mb-1"><input value={signboard2Title} onChange={e=>setSignboard2Title(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌文字主題"/><input value={signboard2Content} onChange={e=>setSignboard2Content(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌內容"/></div>}
             <button onClick={()=>setShowServices(!showServices)} className="text-xs text-gold hover:underline mt-1">{showServices?'▲ 收起':'▼ 更多加值服務'}</button>
             {showServices&&<div className="grid grid-cols-2 gap-1 ml-4 mt-1">{[{l:'嬰兒座椅 0-1歲',p:200},{l:'兒童座椅 1-4歲',p:200},{l:'增高座墊 4-8歲',p:150},{l:'搬行李上樓(件)',p:100},{l:'中途等待(30分)',p:300},{l:'攜帶寵物',p:100}].map(s=><label key={s.l} className="flex items-center gap-1 text-xs text-mist"><input type="checkbox" className="accent-gold"/>{s.l} +${s.p}</label>)}</div>}
           </div>
