@@ -23,7 +23,7 @@ export default function BookingPage() {
   const [hour,setHour]=useState(String(d.getHours()).padStart(2,'0')); const [minute,setMinute]=useState(d.getMinutes()<5?'00':String(Math.floor(d.getMinutes()/5)*5).padStart(2,'0'));
   const [vehicle,setVehicle]=useState('sedan'); const [passengers,setPassengers]=useState(1); const [luggage,setLuggage]=useState(0);
   const [signboard,setSignboard]=useState(false); const [signboardTitle,setSignboardTitle]=useState(''); const [signboardContent,setSignboardContent]=useState('');
-  const [signboard2,setSignboard2]=useState(false);
+  const [signboard2,setSignboard2]=useState(false); const [signboard2Title,setSignboard2Title]=useState(''); const [signboard2Content,setSignboard2Content]=useState('');
   const [showServices,setShowServices]=useState(false);
   const [addrCount,setAddrCount]=useState(1); const [destAddrCount,setDestAddrCount]=useState(1); const [showContact,setShowContact]=useState(false);
   const [name,setName]=useState(''); const [phone,setPhone]=useState(''); const [email,setEmail]=useState('');
@@ -45,7 +45,7 @@ export default function BookingPage() {
     if(!name) return alert('請填寫姓名');
     if(!phone) return alert('請填寫手機');
     const sched=`${year}-${month}-${day}T${hour}:${minute}:00`;
-    const extras=[signboard?'舉牌':null,signboard2?'第二組舉牌':null].filter(Boolean).join(',');
+    const extras=[signboard?`舉牌:${signboardTitle||''}/${signboardContent||''}`:null,signboard2?`第二組舉牌:${signboard2Title||''}/${signboard2Content||''}`:null].filter(Boolean).join(',');
     const{data}=await api.post('/bookings',{bookingType:tab,pickupAddress:tab==='pickup'?airport:dest,dropoffAddress:tab==='pickup'?dest:airport,flightNumber:flightNo||null,scheduledPickupAt:sched,passengerCount:passengers,luggageCount:luggage,vehicleType:vehicle,paymentMethod:payment,specialRequests:extras||null});
     nav(`/track/${data.referenceCode}`);
   };
@@ -147,6 +147,7 @@ export default function BookingPage() {
             <label className="flex items-center gap-2 text-sm text-ivory/80 mb-1"><input type="checkbox" checked={signboard} onChange={e=>setSignboard(e.target.checked)} className="accent-gold" />舉牌服務 +$200</label>
             {signboard&&<div className="ml-6 space-y-1 mb-1"><input value={signboardTitle} onChange={e=>setSignboardTitle(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌文字主題"/><input value={signboardContent} onChange={e=>setSignboardContent(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌內容"/></div>}
             <label className="flex items-center gap-2 text-sm text-ivory/80 mb-1"><input type="checkbox" checked={signboard2} onChange={e=>setSignboard2(e.target.checked)} className="accent-gold" />第二組舉牌 +$200</label>
+            {signboard2&&<div className="ml-6 space-y-1 mb-1"><input value={signboard2Title} onChange={e=>setSignboard2Title(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌文字主題"/><input value={signboard2Content} onChange={e=>setSignboard2Content(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌內容"/></div>}
             <button onClick={()=>setShowServices(!showServices)} className="text-xs text-gold hover:underline mt-1">{showServices?'▲ 收起':'▼ 更多加值服務'}</button>
             {showServices&&<div className="grid grid-cols-2 gap-1 ml-4 mt-1">{[{l:'嬰兒座椅 0-1歲',p:200},{l:'兒童座椅 1-4歲',p:200},{l:'增高座墊 4-8歲',p:150},{l:'搬行李上樓(件)',p:100},{l:'中途等待(30分)',p:300},{l:'攜帶寵物',p:100}].map(s=><label key={s.l} className="flex items-center gap-1 text-xs text-mist"><input type="checkbox" className="accent-gold"/>{s.l} +${s.p}</label>)}</div>}
           </div>
