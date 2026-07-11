@@ -29,6 +29,7 @@ export default function BookingPage() {
   const [payment,setPayment]=useState('cash'); const [price,setPrice]=useState<number|null>(null); const [calculating,setCalculating]=useState(false);
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [durationMin, setDurationMin] = useState<number | null>(null);
+  const [addonQtys, setAddonQtys] = useState<Record<number, number>>({});
 
   useEffect(() => {
     if (user) {
@@ -63,8 +64,12 @@ export default function BookingPage() {
     if(!name) return alert('請填寫姓名');
     if(!phone) return alert('請填寫手機');
     const sched=`${year}-${month}-${day}T${hour}:${minute}:00`;
-    const extras=[signboard?'舉牌':null,signboard2?'第二組舉牌':null].filter(Boolean).join(',');
-    const{data}=await api.post('/bookings',{bookingType:tab,pickupAddress:tab==='pickup'?airport:dest,dropoffAddress:tab==='pickup'?dest:airport,flightNumber:flightNo||null,scheduledPickupAt:sched,passengerCount:passengers,luggageCount:luggage,vehicleType:vehicle,paymentMethod:payment,specialRequests:extras||null});
+    const addonParts = [
+      signboard ? '舉牌' : null,
+      signboard2 ? '第二組舉牌' : null,
+      ...['嬰兒座椅','兒童座椅','增高座墊','搬行李上樓','中途等待','攜帶寵物'].map((n, i) => addonQtys[i] ? `${n} x${addonQtys[i]}` : null),
+    ].filter(Boolean);
+    const{data}=await api.post('/bookings',{bookingType:tab,pickupAddress:tab==='pickup'?airport:dest,dropoffAddress:tab==='pickup'?dest:airport,flightNumber:flightNo||null,scheduledPickupAt:sched,passengerCount:passengers,luggageCount:luggage,vehicleType:vehicle,paymentMethod:payment,specialRequests:addonParts.length?addonParts.join(','):null});
     nav(`/track/${data.referenceCode}`);
   };
 
@@ -130,21 +135,20 @@ export default function BookingPage() {
           {/* Mode */}
           {tab==='pickup'&&<div><label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">預約方式</label><div className="flex gap-1 bg-ash/50 rounded-lg p-1 w-fit"><button onClick={()=>setMode('flight')} className={`px-4 py-2 rounded-md text-sm transition-all ${mode==='flight'?'bg-gold/20 text-gold':'text-mist hover:text-ivory'}`}>&#9992; 依航班</button><button onClick={()=>setMode('time')} className={`px-4 py-2 rounded-md text-sm transition-all ${mode==='time'?'bg-gold/20 text-gold':'text-mist hover:text-ivory'}`}>&#128338; 指定時間</button></div></div>}
 
-          <div><label className="block text-xs text-mist mb-1.5">{tab==='pickup'?(mode==='flight'?'航班日期':'乘車日期'):'乘車日期'}</label></div>
-
           {/* Date/time */}
-          {tab!=='general'&&<div className="flex gap-3">
-            <div className="flex-1"><label className="block text-xs text-mist mb-1.5">航班編號</label><input value={flightNo} onChange={e=>setFlightNo(e.target.value)} className="input-premium w-full" placeholder="選填" /></div>
-            <div className="w-28"><label className="block text-xs text-mist mb-1.5">航廈</label><select className="input-premium w-full text-sm">{airport.includes('桃園')?<><option>T1</option><option>T2</option><option>T3</option></>:<><option>國內</option><option>國際</option></>}</select></div>
-          </div>}
-
-          <div className="grid grid-cols-5 gap-1.5">
+          <div>
+            <label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">{tab==='pickup'?(mode==='flight'?'航班日期':'乘車日期'):'乘車日期'}</label>
+            {tab!=='general'&&<div className="flex gap-3 mb-2">
+              <div className="flex-1"><input value={flightNo} onChange={e=>setFlightNo(e.target.value)} className="input-premium w-full text-sm" placeholder="航班編號（選填）" /></div>
+              <div className="w-28"><select className="input-premium w-full text-sm">{airport.includes('桃園')?<><option>T1</option><option>T2</option><option>T3</option></>:<><option>國內</option><option>國際</option></>}</select></div>
+            </div>}
+            <div className="grid grid-cols-5 gap-1.5">
             <div><label className="block text-xs text-mist mb-1">年</label><div className="flex items-center bg-charcoal rounded-lg border border-white/5"><button onClick={()=>setYear(y=>y-1)} className="px-2 py-2 text-fog hover:text-ivory text-xs">&larr;</button><span className="flex-1 text-center text-sm font-medium text-ivory">{year}</span><button onClick={()=>setYear(y=>y+1)} className="px-2 py-2 text-fog hover:text-ivory text-xs">&rarr;</button></div></div>
             <div><label className="block text-xs text-mist mb-1">月</label><select value={month} onChange={e=>setMonth(e.target.value)} className="input-premium w-full text-sm text-center">{Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0')).map(m=><option key={m}>{m}月</option>)}</select></div>
             <div><label className="block text-xs text-mist mb-1">日</label><select value={day} onChange={e=>setDay(e.target.value)} className="input-premium w-full text-sm text-center">{Array.from({length:31},(_,i)=>String(i+1).padStart(2,'0')).map(d=><option key={d}>{d}日</option>)}</select></div>
             <div><label className="block text-xs text-mist mb-1">時</label><select value={hour} onChange={e=>setHour(e.target.value)} className="input-premium w-full text-sm text-center">{HOURS.map(h=><option key={h}>{h}時</option>)}</select></div>
             <div><label className="block text-xs text-mist mb-1">分</label><select value={minute} onChange={e=>setMinute(e.target.value)} className="input-premium w-full text-sm text-center">{MINUTES.map(m=><option key={m}>{m}分</option>)}</select></div>
-          </div>
+          </div></div>
 
           {/* Vehicle */}
           <div><label className="block text-xs text-mist mb-2 uppercase tracking-wider">車型</label><div className="grid grid-cols-3 gap-1.5">{VEHICLES.map(v=>(<button key={v} onClick={()=>setVehicle(v)} className={`py-3 rounded-lg text-xs transition-all border ${vehicle===v?'border-gold bg-gold/10 text-gold':'border-white/5 text-mist hover:border-white/15 hover:text-ivory'}`}>{V_LABELS[v]}</button>))}</div></div>
@@ -160,11 +164,29 @@ export default function BookingPage() {
             {signboard&&<div className="ml-6 space-y-1 mb-1"><input value={signboardTitle} onChange={e=>setSignboardTitle(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌文字主題"/><input value={signboardContent} onChange={e=>setSignboardContent(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌內容"/></div>}
             <label className="flex items-center gap-2 text-sm text-ivory/80 mb-1"><input type="checkbox" checked={signboard2} onChange={e=>setSignboard2(e.target.checked)} className="accent-gold" />第二組舉牌 +$200</label>
             <button onClick={()=>setShowServices(!showServices)} className="text-xs text-gold hover:underline mt-1">{showServices?'▲ 收起':'▼ 更多加值服務'}</button>
-            {showServices&&<div className="grid grid-cols-2 gap-1 ml-4 mt-1">{[{l:'嬰兒座椅 0-1歲',p:200},{l:'兒童座椅 1-4歲',p:200},{l:'增高座墊 4-8歲',p:150},{l:'搬行李上樓(件)',p:100},{l:'中途等待(30分)',p:300},{l:'攜帶寵物',p:100}].map(s=><label key={s.l} className="flex items-center gap-1 text-xs text-mist"><input type="checkbox" className="accent-gold"/>{s.l} +${s.p}</label>)}</div>}
+            {showServices&&<div className="space-y-1.5 ml-4 mt-2">{[{l:'嬰兒座椅 0-1歲',p:200},{l:'兒童座椅 1-4歲',p:200},{l:'增高座墊 4-8歲',p:150},{l:'搬行李上樓(件)',p:100},{l:'中途等待(30分)',p:300},{l:'攜帶寵物',p:100}].map((s,i)=>{const qty=addonQtys[i]||0;return(<div key={s.l} className="flex items-center justify-between"><div className="flex items-center gap-1.5"><input type="checkbox" checked={qty>0} onChange={()=>setAddonQtys(prev=>qty>0?(({[i]:0,...prev})):{...prev,[i]:1})} className="accent-gold"/><span className="text-xs text-mist">{s.l}<span className="text-gold ml-1">+${s.p}</span></span></div><div className="flex items-center gap-1"><button type="button" onClick={()=>setAddonQtys(prev=>({...prev,[i]:Math.max(0,(prev[i]||0)-1)}))} className="w-6 h-6 rounded border border-white/10 text-fog hover:text-ivory hover:border-white/20 text-xs leading-none disabled:opacity-30" disabled={qty<=0}>−</button><span className="text-xs text-ivory w-5 text-center">{qty}</span><button type="button" onClick={()=>setAddonQtys(prev=>({...prev,[i]:(prev[i]||0)+1}))} className="w-6 h-6 rounded border border-white/10 text-fog hover:text-ivory hover:border-white/20 text-xs leading-none">+</button></div></div>)})}</div>}
           </div>
 
           {/* Payment */}
-          <div><label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">付款方式</label><select value={payment} onChange={e=>setPayment(e.target.value)} className="input-premium w-full text-sm"><option value="cash">現金（下車付費）</option><option value="card">線上刷卡</option></select></div>
+          <div>
+            <label className="block text-xs text-mist mb-2 uppercase tracking-wider">付款方式</label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {[
+                { key: 'cash', label: '💵 現金', sub: '下車付費' },
+                { key: 'card', label: '💳 刷卡', sub: '線上付款' },
+              ].map(m => (
+                <button key={m.key} onClick={() => setPayment(m.key)}
+                  className={`py-3 rounded-lg text-sm transition-all border ${
+                    payment === m.key
+                      ? 'border-gold bg-gold/10 text-gold'
+                      : 'border-white/5 text-mist hover:border-white/15 hover:text-ivory'
+                  }`}>
+                  <div>{m.label}</div>
+                  <div className="text-[10px] opacity-60">{m.sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Price */}
           <div className="bg-charcoal rounded-xl border border-white/5 overflow-hidden">
