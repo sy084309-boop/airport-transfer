@@ -123,7 +123,7 @@ export async function validateEnhanced(req: Request, res: Response) {
         departureAirport: tdxFlight.departureAirportId || '?',
         arrivalAirport: tdxFlight.arrivalAirportId || '?',
         departureTime: tdxFlight.scheduleTime,
-        arrivalTime: '',
+        arrivalTime: tdxFlight.arrivalTime || '',
         departureTimezone: depTZ,
         arrivalTimezone: arrTZ,
         crossesMidnight: midnightCheck.crossesMidnight,

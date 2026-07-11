@@ -120,6 +120,7 @@ function normalizeFlight(raw: any): FlightInfo {
     departureAirportId: raw.DepartureAirportID,
     arrivalAirportId: raw.ArrivalAirportID,
     scheduleTime: raw.ScheduleDepartureTime || raw.ScheduleArrivalTime,
+    arrivalTime: raw.ScheduleArrivalTime || null,
     actualTime: raw.ActualDepartureTime || raw.ActualArrivalTime || null,
     estimatedTime: raw.EstimatedDepartureTime || raw.EstimatedArrivalTime || null,
     remark,

@@ -125,7 +125,7 @@ export default function BookingPage() {
 
           {/* Flight — 接機依航班驗證，指定時間/送機簡單輸入 */}
           {tab==='pickup'&&mode==='flight'&&<div className="flex gap-3">
-            <div className="flex-1"><FlightValidator flightNo={flightNo} onChange={setFlightNo} /></div>
+            <div className="flex-1"><FlightValidator flightNo={flightNo} onChange={setFlightNo} onValid={(info:any)=>{const arrival=info.arrivalTime||info.departureTime;if(!arrival)return;const t=new Date(arrival);if(isNaN(t.getTime()))return;if(!info.arrivalTime)t.setHours(t.getHours()+3);setYear(t.getFullYear());setMonth(String(t.getMonth()+1).padStart(2,'0'));setDay(String(t.getDate()).padStart(2,'0'));setHour(String(t.getHours()).padStart(2,'0'));setMinute(String(Math.floor(t.getMinutes()/5)*5).padStart(2,'0'));}} /></div>
             <div className="w-28"><label className="block text-xs text-mist mb-1.5">航廈</label><select className="input-premium w-full text-sm">{airport.includes('桃園')?<><option>T1</option><option>T2</option><option>T3</option></>:<><option>國內</option><option>國際</option></>}</select></div>
           </div>}
           {(tab==='sendoff'||(tab==='pickup'&&mode==='time'))&&<div className="flex gap-3">
