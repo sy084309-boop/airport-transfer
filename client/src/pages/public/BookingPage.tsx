@@ -37,7 +37,7 @@ export default function BookingPage() {
     }
   }, [user]);
 
-  const calcPrice = async () => { if(!dest) return; setCalculating(true); try{ const pickupAddr = tab==='sendoff' ? airport : dest; const dropoffAddr = tab==='sendoff' ? dest : airport; const{data}=await api.post('/pricing/calculate',{vehicleType:vehicle,origin:pickupAddr,dest:dropoffAddr}); setPrice(data.totalPrice+(signboard?200:0)+(signboard2?200:0)); } catch{setPrice(null)} setCalculating(false); };
+  const calcPrice = async () => { if(!dest) return; setCalculating(true); try{ const{data}=await api.post('/pricing/calculate',{vehicleType:vehicle,origin:'taipei',dest:'taoyuan_airport'}); setPrice(data.totalPrice+(signboard?200:0)+(signboard2?200:0)); } catch{setPrice(null)} setCalculating(false); };
 
   const submit = async () => {
     if(new Date(`${year}-${month}-${day}T${hour}:${minute}:00`)<new Date()) return alert('不可預約過去的時間');
@@ -46,7 +46,7 @@ export default function BookingPage() {
     if(!phone) return alert('請填寫手機');
     const sched=`${year}-${month}-${day}T${hour}:${minute}:00`;
     const extras=[signboard?'舉牌':null,signboard2?'第二組舉牌':null].filter(Boolean).join(',');
-    const{data}=await api.post('/bookings',{bookingType:tab,pickupAddress:tab==='sendoff'?airport:dest,dropoffAddress:tab==='sendoff'?dest:airport,flightNumber:flightNo||null,scheduledPickupAt:sched,passengerCount:passengers,luggageCount:luggage,vehicleType:vehicle,paymentMethod:payment,specialRequests:extras||null});
+    const{data}=await api.post('/bookings',{bookingType:tab,pickupAddress:tab==='pickup'?airport:dest,dropoffAddress:tab==='pickup'?dest:airport,flightNumber:flightNo||null,scheduledPickupAt:sched,passengerCount:passengers,luggageCount:luggage,vehicleType:vehicle,paymentMethod:payment,specialRequests:extras||null});
     nav(`/track/${data.referenceCode}`);
   };
 
@@ -72,8 +72,11 @@ export default function BookingPage() {
         <div className="glass-card p-6 space-y-4">
           <div className="flex bg-ash/50 rounded-xl p-1">{tabs.map(t=>(<button key={t.key} onClick={()=>setTab(t.key)} className={`flex-1 py-2.5 text-sm rounded-lg transition-all ${tab===t.key?'bg-gold text-obsidian':'text-mist hover:text-ivory'}`}>{t.label}</button>))}</div>
 
-          {/* Pickup: Address first */}
-          {(tab==='pickup'||tab==='general')&&<div>
+          {/* Pickup: Airport first */}
+          {tab==='pickup'&&<div><label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">出發地（機場）</label><select value={airport} onChange={e=>setAirport(e.target.value)} className="input-premium w-full">{AIRPORTS.map(a=><option key={a}>{a}</option>)}</select></div>}
+
+          {/* Sendoff/General: Address first */}
+          {(tab==='sendoff'||tab==='general')&&<div>
             <label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">出發地</label>
             <input value={dest} onChange={e=>setDest(e.target.value)} className="input-premium w-full" placeholder="地址 1" />
             {addrCount>=2&&<input className="input-premium w-full mt-1.5" placeholder="地址 2" />}
@@ -85,20 +88,17 @@ export default function BookingPage() {
             </div>
           </div>}
 
-          {/* Pickup: Airport destination */}
-          {tab==='pickup'&&<div><label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">目的地（機場）</label><select value={airport} onChange={e=>setAirport(e.target.value)} className="input-premium w-full">{AIRPORTS.map(a=><option key={a}>{a}</option>)}</select></div>}
-
-          {/* Sendoff: Airport first */}
-          {tab==='sendoff'&&<div><label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">出發地（機場）</label><select value={airport} onChange={e=>setAirport(e.target.value)} className="input-premium w-full">{AIRPORTS.map(a=><option key={a}>{a}</option>)}</select></div>}
-
-          {/* Sendoff/General: Address destination */}
-          {(tab==='sendoff'||tab==='general')&&<div>
+          {/* Pickup: Destination */}
+          {tab==='pickup'&&<div>
             <label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">目的地</label>
             <input value={dest} onChange={e=>setDest(e.target.value)} className="input-premium w-full" placeholder="地址 1" />
             {addrCount>=2&&<input className="input-premium w-full mt-1.5" placeholder="地址 2" />}
             {addrCount>=3&&<input className="input-premium w-full mt-1.5" placeholder="地址 3" />}
             {addrCount>=4&&<input className="input-premium w-full mt-1.5" placeholder="地址 4" />}
           </div>}
+
+          {/* Sendoff: Airport after address */}
+          {tab==='sendoff'&&<div><label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">目的地（機場）</label><select value={airport} onChange={e=>setAirport(e.target.value)} className="input-premium w-full">{AIRPORTS.map(a=><option key={a}>{a}</option>)}</select></div>}
 
           {/* General: Destination */}
           {tab==='general'&&<div>
