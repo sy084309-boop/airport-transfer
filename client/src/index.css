@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+/* === 機場快綫 · 設計系統 === */
+
+@theme {
+  /* 主色調 — 深炭灰底 + 暖香檳金 */
+  --color-obsidian: #0a0e14;
+  --color-charcoal: #11161d;
+  --color-slate: #1a2028;
+  --color-ash: #242c36;
+
+  /* 暖金/琥珀點綴 */
+  --color-gold: #c9a96e;
+  --color-gold-light: #d4ba8a;
+  --color-gold-dark: #b8933a;
+  --color-champagne: #e8d5b7;
+
+  /* 文字 */
+  --color-ivory: #f0f0e8;
+  --color-mist: #8b949e;
+  --color-fog: #5a6370;
+
+  /* 功能色 */
+  --color-success: #3fb950;
+  --color-alert: #d2991d;
+  --color-danger: #f85149;
+
+  /* 字體 */
+  --font-display: 'Noto Serif TC', serif;
+  --font-body: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* === 全域 === */
+body {
+  font-family: var(--font-body);
+  background: var(--color-obsidian);
+  color: var(--color-ivory);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === 自訂動畫 === */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(201,169,110,0.15); }
+  50% { box-shadow: 0 0 40px rgba(201,169,110,0.3); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.8s ease-out both;
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(201,169,110,0.08), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+/* === 金線裝飾 === */
+.gold-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+  border: none;
+}
+.gold-rule-left {
+  width: 60px;
+  height: 2px;
+  background: var(--color-gold);
+  border: none;
+  margin: 0;
+}
+
+/* === 玻璃卡片 === */
+.glass-card {
+  background: rgba(22, 27, 34, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(201, 169, 110, 0.12);
+  border-radius: 16px;
+}
+.glass-card:hover {
+  border-color: rgba(201, 169, 110, 0.3);
+}
+
+/* === 輸入框 === */
+.input-premium {
+  background: var(--color-charcoal);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  color: var(--color-ivory);
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  transition: all 0.25s;
+}
+.input-premium:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(201,169,110,0.1);
+}
+.input-premium::placeholder {
+  color: var(--color-fog);
+}
+
+/* === 按鈕 === */
+.btn-gold {
+  background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
+  color: var(--color-obsidian);
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.95rem;
+}
+.btn-gold:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(201,169,110,0.25);
+}
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold);
+  font-weight: 500;
+  padding: 10px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-outline:hover {
+  background: rgba(201,169,110,0.08);
+}
+
+/* === 卷軸條 === */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-obsidian); }
+::-webkit-scrollbar-thumb { background: var(--color-ash); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-fog); }
