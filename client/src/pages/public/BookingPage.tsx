@@ -19,7 +19,7 @@ export default function BookingPage() {
   const [flightNo,setFlightNo] = useState('');
   const d=new Date();
   const [year,setYear]=useState(d.getFullYear()); const [month,setMonth]=useState(String(d.getMonth()+1).padStart(2,'0')); const [day,setDay]=useState(String(d.getDate()).padStart(2,'0'));
-  const [hour,setHour]=useState('08'); const [minute,setMinute]=useState('00');
+  const [hour,setHour]=useState(String(d.getHours()).padStart(2,'0')); const [minute,setMinute]=useState(d.getMinutes()<5?'00':String(Math.floor(d.getMinutes()/5)*5).padStart(2,'0'));
   const [vehicle,setVehicle]=useState('sedan'); const [passengers,setPassengers]=useState(1); const [luggage,setLuggage]=useState(0);
   const [signboard,setSignboard]=useState(false); const [signboardTitle,setSignboardTitle]=useState(''); const [signboardContent,setSignboardContent]=useState('');
   const [signboard2,setSignboard2]=useState(false);
@@ -119,10 +119,12 @@ export default function BookingPage() {
             <div className="w-28"><label className="block text-xs text-mist mb-1.5">航廈</label><select className="input-premium w-full text-sm">{airport.includes('桃園')?<><option>T1</option><option>T2</option><option>T3</option></>:<><option>國內</option><option>國際</option></>}</select></div>
           </div>}
 
-          <div className="grid grid-cols-5 gap-1.5">
+          <div className="grid grid-cols-3 gap-1.5">
             <div><label className="block text-xs text-mist mb-1">年</label><div className="flex items-center bg-charcoal rounded-lg border border-white/5"><button onClick={()=>setYear(y=>y-1)} className="px-2 py-2 text-fog hover:text-ivory text-xs">&larr;</button><span className="flex-1 text-center text-sm font-medium text-ivory">{year}</span><button onClick={()=>setYear(y=>y+1)} className="px-2 py-2 text-fog hover:text-ivory text-xs">&rarr;</button></div></div>
             <div><label className="block text-xs text-mist mb-1">月</label><select value={month} onChange={e=>setMonth(e.target.value)} className="input-premium w-full text-sm text-center">{Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0')).map(m=><option key={m}>{m}月</option>)}</select></div>
             <div><label className="block text-xs text-mist mb-1">日</label><select value={day} onChange={e=>setDay(e.target.value)} className="input-premium w-full text-sm text-center">{Array.from({length:31},(_,i)=>String(i+1).padStart(2,'0')).map(d=><option key={d}>{d}日</option>)}</select></div>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
             <div><label className="block text-xs text-mist mb-1">時</label><select value={hour} onChange={e=>setHour(e.target.value)} className="input-premium w-full text-sm text-center">{HOURS.map(h=><option key={h}>{h}時</option>)}</select></div>
             <div><label className="block text-xs text-mist mb-1">分</label><select value={minute} onChange={e=>setMinute(e.target.value)} className="input-premium w-full text-sm text-center">{MINUTES.map(m=><option key={m}>{m}分</option>)}</select></div>
           </div>
