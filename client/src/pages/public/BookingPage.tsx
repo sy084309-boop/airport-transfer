@@ -27,6 +27,8 @@ export default function BookingPage() {
   const [addrCount,setAddrCount]=useState(1); const [destAddrCount,setDestAddrCount]=useState(1); const [showContact,setShowContact]=useState(false);
   const [name,setName]=useState(''); const [phone,setPhone]=useState(''); const [email,setEmail]=useState('');
   const [payment,setPayment]=useState('cash'); const [price,setPrice]=useState<number|null>(null); const [calculating,setCalculating]=useState(false);
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
+  const [durationMin, setDurationMin] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -36,7 +38,24 @@ export default function BookingPage() {
     }
   }, [user]);
 
-  const calcPrice = async () => { if(!dest) return; setCalculating(true); try{ const{data}=await api.post('/pricing/calculate',{vehicleType:vehicle,origin:'taipei',dest:'taoyuan_airport'}); setPrice(data.totalPrice+(signboard?200:0)+(signboard2?200:0)); } catch{setPrice(null)} setCalculating(false); };
+  const calcPrice = async () => {
+    if(!dest) return;
+    setCalculating(true);
+    setDistanceKm(null); setDurationMin(null);
+    try {
+      const pickupAddr = tab === 'pickup' ? airport : dest;
+      const dropoffAddr = tab === 'pickup' ? dest : airport;
+      const { data } = await api.post('/pricing/estimate', {
+        pickupAddress: pickupAddr,
+        dropoffAddress: dropoffAddr,
+        vehicleType: vehicle,
+      });
+      setPrice(data.price.totalPrice + (signboard ? 200 : 0) + (signboard2 ? 200 : 0));
+      setDistanceKm(data.route.distanceKm);
+      setDurationMin(data.route.durationMin);
+    } catch { setPrice(null); setDistanceKm(null); setDurationMin(null); }
+    setCalculating(false);
+  };
 
   const submit = async () => {
     if(new Date(`${year}-${month}-${day}T${hour}:${minute}:00`)<new Date()) return alert('不可預約過去的時間');
@@ -148,7 +167,30 @@ export default function BookingPage() {
           <div><label className="block text-xs text-mist mb-1.5 uppercase tracking-wider">付款方式</label><select value={payment} onChange={e=>setPayment(e.target.value)} className="input-premium w-full text-sm"><option value="cash">現金（下車付費）</option><option value="card">線上刷卡</option></select></div>
 
           {/* Price */}
-          <div className="bg-charcoal rounded-xl p-4 flex justify-between items-center border border-white/5"><span className="text-sm text-mist">{calculating?'計算中...':price!==null?`NT$ ${price?.toLocaleString()}`:'尚未試算'}</span><button onClick={calcPrice} className="btn-outline text-sm py-1.5 px-4">試算車資</button></div>
+          <div className="bg-charcoal rounded-xl border border-white/5 overflow-hidden">
+            <div className="p-4 flex justify-between items-center">
+              <span className="text-sm text-ivory font-medium">試算車資</span>
+              <button onClick={calcPrice} disabled={calculating} className="btn-outline text-sm py-1.5 px-4 disabled:opacity-50">
+                {calculating ? '計算中...' : '開始試算'}
+              </button>
+            </div>
+            {(distanceKm !== null || price !== null) && (
+              <div className="border-t border-white/5 px-4 py-3 grid grid-cols-3 gap-3">
+                <div className="text-center">
+                  <div className="text-xs text-fog mb-0.5">📍 預估距離</div>
+                  <div className="text-lg font-bold text-ivory">{distanceKm !== null ? `${distanceKm} km` : '—'}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-fog mb-0.5">⏱ 預估時間</div>
+                  <div className="text-lg font-bold text-ivory">{durationMin !== null ? `約 ${durationMin} 分` : '—'}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-fog mb-0.5">💰 預估車資</div>
+                  <div className="text-lg font-bold text-gold">{price !== null ? `NT$ ${price.toLocaleString()}` : '—'}</div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Customer info */}
           <div className="border-t border-white/5 pt-4">

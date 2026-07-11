@@ -19,6 +19,16 @@ export async function getRules(req: Request, res: Response, next: NextFunction) 
   }
 }
 
+export async function estimate(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await pricingService.estimateRouteAndPrice(req.body);
+    res.json(result);
+  } catch (err: any) {
+    if (err.message?.includes('無法定位')) return res.status(400).json({ error: err.message });
+    next(err);
+  }
+}
+
 export async function createRule(req: Request, res: Response, next: NextFunction) {
   try {
     const rule = await pricingService.createPricingRule(req.body);
