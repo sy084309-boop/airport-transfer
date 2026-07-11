@@ -96,6 +96,10 @@ export default function BookingPage() {
             {addrCount>=2&&<input className="input-premium w-full mt-1.5" placeholder="地址 2" />}
             {addrCount>=3&&<input className="input-premium w-full mt-1.5" placeholder="地址 3" />}
             {addrCount>=4&&<input className="input-premium w-full mt-1.5" placeholder="地址 4" />}
+            <div className="flex gap-2 mt-1">
+              {addrCount<4&&<button type="button" onClick={()=>setAddrCount(c=>c+1)} className="text-xs text-gold hover:underline">+ 新增地址</button>}
+              {addrCount>1&&<button type="button" onClick={()=>setAddrCount(1)} className="text-xs text-fog hover:underline">- 收起</button>}
+            </div>
           </div>}
 
           {/* Sendoff: Airport after address */}
@@ -108,6 +112,10 @@ export default function BookingPage() {
             {destAddrCount>=2&&<input className="input-premium w-full mt-1.5" placeholder="目的地地址 2" />}
             {destAddrCount>=3&&<input className="input-premium w-full mt-1.5" placeholder="目的地地址 3" />}
             {destAddrCount>=4&&<input className="input-premium w-full mt-1.5" placeholder="目的地地址 4" />}
+            <div className="flex gap-2 mt-1">
+              {destAddrCount<4&&<button type="button" onClick={()=>setDestAddrCount(c=>c+1)} className="text-xs text-gold hover:underline">+ 新增地址</button>}
+              {destAddrCount>1&&<button type="button" onClick={()=>setDestAddrCount(1)} className="text-xs text-fog hover:underline">- 收起</button>}
+            </div>
           </div>}
 
           {/* Mode */}
