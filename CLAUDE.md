@@ -5,6 +5,14 @@
 2. **問** 不確定的需求先問、不要猜
 3. **想** 改哪裡、影響哪些檔案、會不會改 A 壞 B
 
+## 🔴 改 A 防 BCD — 每次改動前強制列出影響範圍
+改任何一個地方之前，先列出它牽連的所有位置：
+- 改 **layout** → 必查 submit()、calcPrice()、tab 條件、address 方向
+- 改 **state** → 必查所有用到該 state 的 JSX 和 function
+- 改 **component** → 必查 import、props、onChange/onValid 回呼
+- 改 **JSX** → 存檔前數括號（開幾個 `{` 就關幾個 `}`）
+- commit 前逐項打勾確認沒壞，才能 commit
+
 ## 🚫 不准直接寫 code — 先叫對的人
 - 任何任務 → 先叫 **Nora**（`/hello-nora`）派發給對的角色
 - commit 前 → 先叫 **Ray**（`/ray-review`）過 3-gate
