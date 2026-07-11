@@ -1,15 +1,66 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { Link } from 'react-router-dom';
 
+const STATUS_TABS = [
+  { key: '', label: '全部' },
+  { key: 'pending', label: '待處理' },
+  { key: 'confirmed', label: '已確認' },
+  { key: 'in_progress', label: '進行中' },
+  { key: 'completed', label: '已完成' },
+  { key: 'cancelled', label: '已取消' },
+];
+
+const STATUS_CLASS: Record<string, string> = {
+  completed: 'bg-success/10 text-success border border-success/20',
+  cancelled: 'bg-danger/10 text-danger border border-danger/20',
+  pending: 'bg-alert/10 text-alert border border-alert/20',
+  confirmed: 'bg-blue-400/10 text-blue-400 border border-blue-400/20',
+  in_progress: 'bg-gold/10 text-gold border border-gold/20',
+};
+
+const TYPE_LABEL: Record<string, string> = {
+  pickup: '接機', sendoff: '送機', general: '一般', urgent: '急件',
+};
+
 export default function MemberDashboard() {
   const { user, logout } = useAuthStore();
   const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
+
+  const fetchBookings = useCallback((p: number, status: string) => {
+    setLoading(true);
+    setError('');
+    const params = new URLSearchParams({ page: String(p), limit: String(limit) });
+    if (status) params.set('status', status);
+    api.get(`/bookings?${params}`)
+      .then(({ data }) => {
+        setBookings(data.data || []);
+        setTotal(data.total || 0);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.response?.data?.error || '無法載入訂單，請稍後再試');
+        setLoading(false);
+      });
+  }, []);
 
   useEffect(() => {
-    api.get('/bookings').then(({ data }) => setBookings(data));
-  }, []);
+    fetchBookings(page, statusFilter);
+  }, [page, statusFilter, fetchBookings]);
+
+  const changeStatus = (s: string) => {
+    setStatusFilter(s);
+    setPage(1);
+  };
+
+  const totalPages = Math.ceil(total / limit);
 
   if (!user) return (
     <div className="min-h-screen bg-obsidian flex items-center justify-center">
@@ -44,60 +95,103 @@ export default function MemberDashboard() {
           <Link to="/" className="btn-gold text-sm py-2 px-5">立即預約</Link>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {[
-            { label: '全部訂單', value: bookings.length },
-            { label: '已完成', value: bookings.filter(b => b.status === 'completed').length },
-            { label: '進行中', value: bookings.filter(b => !['completed','cancelled'].includes(b.status)).length },
-          ].map((s, i) => (
-            <div key={i} className="glass-card p-4 text-center">
-              <div className="text-2xl font-bold text-gold">{s.value}</div>
-              <div className="text-xs text-fog mt-1">{s.label}</div>
-            </div>
+        {/* Status filter tabs */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => changeStatus(tab.key)}
+              className={`text-xs px-4 py-1.5 rounded-full border transition-colors ${
+                statusFilter === tab.key
+                  ? 'bg-gold/20 text-gold border-gold/40'
+                  : 'border-white/10 text-mist hover:border-white/20 hover:text-ivory'
+              }`}
+            >
+              {tab.label}
+            </button>
           ))}
         </div>
 
-        {bookings.length === 0 ? (
+        {/* Content area */}
+        {loading ? (
+          <div className="glass-card p-12 text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full mx-auto mb-4" />
+            <p className="text-fog text-sm">載入中...</p>
+          </div>
+        ) : error ? (
+          <div className="glass-card p-12 text-center">
+            <div className="text-4xl mb-4">&#9888;</div>
+            <p className="text-danger mb-2">{error}</p>
+            <button onClick={() => fetchBookings(page, statusFilter)}
+              className="btn-outline text-sm py-2 px-5">重新載入</button>
+          </div>
+        ) : bookings.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-4xl mb-4">&#128218;</div>
-            <p className="text-mist mb-2">尚無訂單記錄</p>
+            <p className="text-mist mb-2">
+              {statusFilter ? '此狀態尚無訂單' : '尚無訂單記錄'}
+            </p>
             <Link to="/" className="text-gold hover:underline text-sm">立即預約第一趟行程</Link>
           </div>
         ) : (
-          <div className="glass-card overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/5 text-mist text-xs uppercase tracking-wider">
-                  <th className="px-4 py-3 text-left">參考碼</th>
-                  <th className="px-4 py-3 text-left">類型</th>
-                  <th className="px-4 py-3 text-left">狀態</th>
-                  <th className="px-4 py-3 text-left">金額</th>
-                  <th className="px-4 py-3 text-left">日期</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookings.map((b: any) => (
-                  <tr key={b.id} className="border-b border-white/5 hover:bg-ivory/5 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs">
-                      <Link to={`/track/${b.reference_code}`}
-                        className="text-gold hover:underline">{b.reference_code}</Link>
-                    </td>
-                    <td className="px-4 py-3 text-mist">{b.booking_type}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        b.status === 'completed' ? 'bg-success/10 text-success border border-success/20' :
-                        b.status === 'cancelled' ? 'bg-danger/10 text-danger border border-danger/20' :
-                        'bg-alert/10 text-alert border border-alert/20'
-                      }`}>{b.status}</span>
-                    </td>
-                    <td className="px-4 py-3 text-ivory font-medium">NT$ {b.total_price?.toLocaleString() || '—'}</td>
-                    <td className="px-4 py-3 text-xs text-fog">{new Date(b.created_at).toLocaleDateString()}</td>
+          <>
+            <div className="glass-card overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/5 text-mist text-xs uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left">參考碼</th>
+                    <th className="px-4 py-3 text-left">類型</th>
+                    <th className="px-4 py-3 text-left">狀態</th>
+                    <th className="px-4 py-3 text-left">金額</th>
+                    <th className="px-4 py-3 text-left">日期</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {bookings.map((b: any) => (
+                    <tr key={b.id} className="border-b border-white/5 hover:bg-ivory/5 transition-colors">
+                      <td className="px-4 py-3 font-mono text-xs">
+                        <Link to={`/track/${b.reference_code}`}
+                          className="text-gold hover:underline">{b.reference_code}</Link>
+                      </td>
+                      <td className="px-4 py-3 text-mist text-xs">
+                        {TYPE_LABEL[b.booking_type] || b.booking_type}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_CLASS[b.status] || 'bg-gray-500/10 text-gray-400 border border-gray-500/20'}`}>
+                          {b.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-ivory font-medium">NT$ {b.total_price?.toLocaleString() || '—'}</td>
+                      <td className="px-4 py-3 text-xs text-fog">{new Date(b.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-6">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="text-xs px-3 py-1.5 rounded border border-white/10 text-mist hover:border-gold/30 hover:text-gold disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  上一頁
+                </button>
+                <span className="text-xs text-fog">
+                  {page} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="text-xs px-3 py-1.5 rounded border border-white/10 text-mist hover:border-gold/30 hover:text-gold disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  下一頁
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Quick actions */}

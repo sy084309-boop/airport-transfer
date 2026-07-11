@@ -51,10 +51,11 @@ router.get('/flights/overview', authenticate, authorize('admin'), async (_req, r
     // 取得所有 active 預約（有航班編號的）
     const bookings = db.prepare(`
       SELECT b.*, u.full_name as customer_name, u.phone as customer_phone,
-             d.full_name as driver_name
+             du.full_name as driver_name
       FROM bookings b
-      LEFT JOIN users u ON b.user_id = u.id
+      LEFT JOIN users u ON b.member_id = u.id
       LEFT JOIN drivers d ON b.driver_id = d.id
+      LEFT JOIN users du ON d.user_id = du.id
       WHERE b.flight_number IS NOT NULL AND b.status NOT IN ('cancelled', 'completed')
       ORDER BY b.scheduled_pickup_at ASC
     `).all() as any[];

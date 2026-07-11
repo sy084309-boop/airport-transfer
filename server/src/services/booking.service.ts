@@ -31,17 +31,22 @@ export function createBooking(data: any, userId?: string, agentId?: string) {
   const refCode = generateRefCode();
   const bookingId = uuid();
 
+  // 從 flightDatetime 拆出 flight_date（YYYY-MM-DD）
+  const flightDate = data.flightDatetime
+    ? (data.flightDatetime.includes('T') ? data.flightDatetime.split('T')[0] : data.flightDatetime.slice(0, 10))
+    : null;
+
   const insertBooking = db.prepare(`INSERT INTO bookings
     (id, reference_code, member_id, agent_id, booking_type, pickup_address, dropoff_address,
-     flight_number, flight_datetime, scheduled_pickup_at, passenger_count, luggage_count,
+     flight_number, flight_datetime, flight_date, scheduled_pickup_at, passenger_count, luggage_count,
      vehicle_type, is_guaranteed, payment_method, subtotal, night_surcharge_applied,
      extra_stops_fee, total_price, special_requests, created_by)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
 
   const tx = db.transaction(() => {
     insertBooking.run(bookingId, refCode, userId || null, agentId || null,
       data.bookingType, data.pickupAddress, data.dropoffAddress,
-      data.flightNumber || null, data.flightDatetime || null, data.scheduledPickupAt,
+      data.flightNumber || null, data.flightDatetime || null, flightDate, data.scheduledPickupAt,
       data.passengerCount || 1, data.luggageCount || 1,
       data.vehicleType || 'sedan', data.isGuaranteed ? 1 : 0, data.paymentMethod || 'cash',
       pricing.basePrice, pricing.nightSurcharge, pricing.extraStopsFee,
@@ -123,14 +128,25 @@ export function updateBookingStatus(bookingId: string, newStatus: string, userId
 }
 
 export function listBookings(filters: any) {
-  let sql = `SELECT b.*, u.full_name as member_name FROM bookings b LEFT JOIN users u ON b.member_id = u.id WHERE 1=1`;
+  const page = Math.max(1, parseInt(filters.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(filters.limit) || 20));
+  const offset = (page - 1) * limit;
+
+  let where = ` WHERE 1=1`;
   const params: any[] = [];
-  if (filters.status) { sql += ` AND b.status = ?`; params.push(filters.status); }
-  if (filters.driverId) { sql += ` AND b.driver_id = ?`; params.push(filters.driverId); }
-  if (filters.memberId) { sql += ` AND b.member_id = ?`; params.push(filters.memberId); }
-  if (filters.agentId) { sql += ` AND b.agent_id = ?`; params.push(filters.agentId); }
-  sql += ` ORDER BY b.created_at DESC LIMIT 50`;
-  return db.prepare(sql).all(...params);
+  if (filters.status) { where += ` AND b.status = ?`; params.push(filters.status); }
+  if (filters.driverId) { where += ` AND b.driver_id = ?`; params.push(filters.driverId); }
+  if (filters.memberId) { where += ` AND b.member_id = ?`; params.push(filters.memberId); }
+  if (filters.agentId) { where += ` AND b.agent_id = ?`; params.push(filters.agentId); }
+
+  const countRow = db.prepare(`SELECT COUNT(*) as total FROM bookings b${where}`).get(...params) as any;
+  const total = countRow.total || 0;
+
+  const data = db.prepare(
+    `SELECT b.*, u.full_name as member_name FROM bookings b LEFT JOIN users u ON b.member_id = u.id${where} ORDER BY b.created_at DESC LIMIT ? OFFSET ?`
+  ).all(...params, limit, offset);
+
+  return { data, page, limit, total };
 }
 
 /** 取得會員最近使用過的地址 */
