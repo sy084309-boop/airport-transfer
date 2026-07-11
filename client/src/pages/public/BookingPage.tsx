@@ -13,7 +13,7 @@ const MINUTES = ['00','05','10','15','20','25','30','35','40','45','50','55'];
 export default function BookingPage() {
   const nav = useNavigate();
   const user = useAuthStore(s => s.user);
-  const [tab,setTab] = useState<'pickup'|'sendoff'|'general'>('sendoff');
+  const [tab,setTab] = useState<'pickup'|'sendoff'|'general'>('pickup');
   const [mode,setMode] = useState<'flight'|'time'>('time');
   const [airport,setAirport] = useState(AIRPORTS[0]);
   const [dest,setDest] = useState('');
@@ -27,6 +27,7 @@ export default function BookingPage() {
   const [showServices,setShowServices]=useState(false);
   const [addrCount,setAddrCount]=useState(1); const [destAddrCount,setDestAddrCount]=useState(1); const [showContact,setShowContact]=useState(false);
   const [name,setName]=useState(''); const [phone,setPhone]=useState(''); const [email,setEmail]=useState('');
+  const [addonQtys, setAddonQtys] = useState<Record<number, number>>({});
   const [payment,setPayment]=useState('cash'); const [price,setPrice]=useState<number|null>(null); const [calculating,setCalculating]=useState(false);
 
   useEffect(() => {
@@ -45,12 +46,12 @@ export default function BookingPage() {
     if(!name) return alert('請填寫姓名');
     if(!phone) return alert('請填寫手機');
     const sched=`${year}-${month}-${day}T${hour}:${minute}:00`;
-    const extras=[signboard?`舉牌:${signboardTitle||''}/${signboardContent||''}`:null,signboard2?`第二組舉牌:${signboard2Title||''}/${signboard2Content||''}`:null].filter(Boolean).join(',');
+    const addonNames=['嬰兒座椅','兒童座椅','增高座墊','搬行李上樓','中途等待','攜帶寵物'];const extras=[signboard?`舉牌:${signboardTitle||''}/${signboardContent||''}`:null,signboard2?`第二組舉牌:${signboard2Title||''}/${signboard2Content||''}`:null,...addonNames.map((n,i)=>addonQtys[i]?`${n} x${addonQtys[i]}`:null)].filter(Boolean).join(',');
     const{data}=await api.post('/bookings',{bookingType:tab,pickupAddress:tab==='pickup'?airport:dest,dropoffAddress:tab==='pickup'?dest:airport,flightNumber:flightNo||null,scheduledPickupAt:sched,passengerCount:passengers,luggageCount:luggage,vehicleType:vehicle,paymentMethod:payment,specialRequests:extras||null});
     nav(`/track/${data.referenceCode}`);
   };
 
-  const tabs=[{key:'sendoff'as const,label:'🛫 送機'},{key:'pickup'as const,label:'🛬 接機'},{key:'general'as const,label:'🚗 一般'}];
+  const tabs=[{key:'pickup'as const,label:'🛬 接機'},{key:'sendoff'as const,label:'🛫 送機'},{key:'general'as const,label:'🚗 一般'}];
 
   return (
     <div className="min-h-screen bg-obsidian">
@@ -149,7 +150,7 @@ export default function BookingPage() {
             <label className="flex items-center gap-2 text-sm text-ivory/80 mb-1"><input type="checkbox" checked={signboard2} onChange={e=>setSignboard2(e.target.checked)} className="accent-gold" />第二組舉牌 +$200</label>
             {signboard2&&<div className="ml-6 space-y-1 mb-1"><input value={signboard2Title} onChange={e=>setSignboard2Title(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌文字主題"/><input value={signboard2Content} onChange={e=>setSignboard2Content(e.target.value)} className="input-premium w-full text-xs" placeholder="舉牌內容"/></div>}
             <button onClick={()=>setShowServices(!showServices)} className="text-xs text-gold hover:underline mt-1">{showServices?'▲ 收起':'▼ 更多加值服務'}</button>
-            {showServices&&<div className="grid grid-cols-2 gap-1 ml-4 mt-1">{[{l:'嬰兒座椅 0-1歲',p:200},{l:'兒童座椅 1-4歲',p:200},{l:'增高座墊 4-8歲',p:150},{l:'搬行李上樓(件)',p:100},{l:'中途等待(30分)',p:300},{l:'攜帶寵物',p:100}].map(s=><label key={s.l} className="flex items-center gap-1 text-xs text-mist"><input type="checkbox" className="accent-gold"/>{s.l} +${s.p}</label>)}</div>}
+            {showServices&&<div className="space-y-1.5 ml-4 mt-2">{[{l:'嬰兒座椅 0-1歲',p:200},{l:'兒童座椅 1-4歲',p:200},{l:'增高座墊 4-8歲',p:150},{l:'搬行李上樓(件)',p:100},{l:'中途等待(30分)',p:300},{l:'攜帶寵物',p:100}].map((s,i)=>{const qty=addonQtys[i]||0;return(<div key={s.l} className="flex items-center justify-between"><label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={qty>0} onChange={()=>setAddonQtys(prev=>qty>0?{...prev,[i]:0}:{...prev,[i]:1})} className="accent-gold"/><span className="text-xs text-mist">{s.l}<span className="text-gold ml-1">+${s.p}</span></span></label><div className="flex items-center gap-1"><button type="button" onClick={()=>setAddonQtys(prev=>({...prev,[i]:Math.max(0,(prev[i]||0)-1)}))} disabled={qty<=0} className="w-6 h-6 rounded border border-white/10 text-fog hover:text-ivory hover:border-white/20 text-xs leading-none disabled:opacity-30">−</button><span className="text-xs text-ivory w-5 text-center">{qty}</span><button type="button" onClick={()=>setAddonQtys(prev=>({...prev,[i]:(prev[i]||0)+1}))} className="w-6 h-6 rounded border border-white/10 text-fog hover:text-ivory hover:border-white/20 text-xs leading-none">+</button></div></div>)})}</div>}
           </div>
 
           {/* Payment */}
