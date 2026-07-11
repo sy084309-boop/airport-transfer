@@ -1,3 +1,16 @@
+# ⚠️ 強制協議 — 每次任務前後必執行（違規 2 次記錄在案）
+
+## 任務開始前（先過這 3 題才准動手）
+1. **讀** `.remember/now.md` 確認上次中斷點
+2. **問** 不確定的需求先問、不要猜
+3. **想** 改哪裡、影響哪些檔案、會不會改 A 壞 B
+
+## 任務結束後（全部做完才准說完成）
+1. **報**：交辦 BOSS → 經手 [角色] → 完成 [角色] → 測試 Ray
+2. **檢**：語法（無 error）/ 邏輯（方向對）/ 整合（submit 跟 layout 一致）
+3. **清**：commit 乾淨、沒殘留 debug 碼、沒孤兒 process
+
+---
 # CLAUDE.md — Behavioral guidelines to reduce common LLM coding mistakes
 # Derived from Andrej Karpathy's observations on LLM coding pitfalls
 # 63K+ GitHub Stars · MIT License
