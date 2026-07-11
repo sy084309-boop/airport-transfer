@@ -11,13 +11,12 @@ export default function FlightValidator({ flightNo, onChange, onValid }: Props) 
   const [valid, setValid] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
   const [info, setInfo] = useState<any>(null);
   const [midnightWarn, setMidnightWarn] = useState<string | null>(null);
-  const [workflow, setWorkflow] = useState<any>(null);
   const [source, setSource] = useState<string | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout>>();
 
   const handleChange = (value: string) => {
     onChange(value);
-    setValid('idle'); setInfo(null); setMidnightWarn(null); setWorkflow(null); setSource(null);
+    setValid('idle'); setInfo(null); setMidnightWarn(null); setSource(null);
     if (debounce.current) clearTimeout(debounce.current);
     if (value.trim().length < 4) return;
     setValid('checking');
@@ -27,14 +26,12 @@ export default function FlightValidator({ flightNo, onChange, onValid }: Props) 
         if (data.valid) {
           setValid('valid');
           setInfo(data.flight);
-          setWorkflow(data.workflow);
           setSource(data.source);
           if (data.midnightWarning) setMidnightWarn(data.midnightWarning);
           onValid?.(data.flight);
         } else {
           setValid('invalid');
           setInfo(data.flight);
-          setWorkflow(data.workflow);
           setSource(data.source);
           if (data.flight?.warning) setMidnightWarn(data.flight.warning);
         }
@@ -121,17 +118,6 @@ export default function FlightValidator({ flightNo, onChange, onValid }: Props) 
             </div>
           )}
           <div className="mt-1 text-mist">仍可繼續手動預約，請自行確認航班日期與接送時間。</div>
-        </div>
-      )}
-
-      {/* 工作流程追蹤 */}
-      {workflow && (valid === 'valid' || valid === 'invalid') && (
-        <div className="mt-2 text-xs text-fog border-t border-white/5 pt-2">
-          <span className="text-mist">流程追蹤：</span>
-          交辦 <span className="text-gold">{workflow.assignedBy}</span>
-          &#8594; 經手 <span className="text-gold">{workflow.handledBy}</span>
-          &#8594; 完成 <span className="text-gold">{workflow.completedBy}</span>
-          &#8594; 測試 <span className="text-gold">{workflow.testedBy}</span>
         </div>
       )}
     </div>

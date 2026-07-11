@@ -55,14 +55,6 @@ export interface FlightInfo {
   warning?: string;
 }
 
-export interface WorkflowLog {
-  assignedBy: string;   // 誰交辦
-  handledBy: string;    // 誰經手
-  completedBy: string;  // 誰完成
-  testedBy: string;     // 誰測試
-  timestamp: string;
-}
-
 /**
  * 從航班編號解析航空公司代碼
  */
@@ -164,30 +156,3 @@ export async function searchAirlineWebsite(flightNo: string): Promise<FlightInfo
   };
 }
 
-/**
- * 生成工作流程記錄
- */
-export function createWorkflowLog(
-  assignedBy: string,
-  handledBy: string,
-  completedBy: string,
-  testedBy: string
-): WorkflowLog {
-  return {
-    assignedBy,
-    handledBy,
-    completedBy,
-    testedBy,
-    timestamp: new Date().toISOString(),
-  };
-}
-
-/**
- * 預設工作流程（AI 團隊）
- */
-export const AI_TEAM_WORKFLOW = {
-  assignedBy: 'BOSS',
-  handledBy: 'Nora → Ace → FlightValidator',
-  completedBy: 'FlightSearch Module',
-  testedBy: 'Ray (3-gate review)',
-};

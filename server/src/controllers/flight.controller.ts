@@ -7,7 +7,7 @@ import {
 import {
   parseFlightCode, getAirlineInfo, getTimezone,
   detectMidnightCrossing, searchAirlineWebsite,
-  AI_TEAM_WORKFLOW, type FlightInfo, type WorkflowLog,
+  type FlightInfo,
 } from '../services/flight_search';
 
 /** GET /api/flights/arrivals?airport=TPE */
@@ -160,21 +160,11 @@ export async function validateEnhanced(req: Request, res: Response) {
       }
     }
 
-    // 工作流程記錄
-    const workflow: WorkflowLog = {
-      assignedBy: AI_TEAM_WORKFLOW.assignedBy,
-      handledBy: AI_TEAM_WORKFLOW.handledBy,
-      completedBy: AI_TEAM_WORKFLOW.completedBy,
-      testedBy: AI_TEAM_WORKFLOW.testedBy,
-      timestamp: new Date().toISOString(),
-    };
-
     res.json({
       valid: tdxFlight ? true : false,
       source,
       sourceUrl,
       flight,
-      workflow,
       midnightWarning: flight.crossesMidnight ? flight.warning : null,
     });
   } catch (e: any) {
