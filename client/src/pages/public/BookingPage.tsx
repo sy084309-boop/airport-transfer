@@ -114,12 +114,12 @@ export default function BookingPage() {
 
           <div><label className="block text-xs text-mist mb-1.5">{tab==='pickup'?(mode==='flight'?'航班日期':'乘車日期'):'乘車日期'}</label></div>
 
-          {/* Flight — 接機用驗證，送機用簡單輸入 */}
-          {tab==='pickup'&&<div className="flex gap-3">
+          {/* Flight — 接機依航班才驗證，指定時間用簡單輸入；送機一律簡單輸入 */}
+          {tab==='pickup'&&mode==='flight'&&<div className="flex gap-3">
             <div className="flex-1"><FlightValidator flightNo={flightNo} onChange={setFlightNo} /></div>
             <div className="w-28"><label className="block text-xs text-mist mb-1.5">航廈</label><select className="input-premium w-full text-sm">{airport.includes('桃園')?<><option>T1</option><option>T2</option><option>T3</option></>:<><option>國內</option><option>國際</option></>}</select></div>
           </div>}
-          {tab==='sendoff'&&<div className="flex gap-3">
+          {(tab==='sendoff'||(tab==='pickup'&&mode==='time'))&&<div className="flex gap-3">
             <div className="w-28"><label className="block text-xs text-mist mb-1.5">航班編號</label><input value={flightNo} onChange={e=>setFlightNo(e.target.value)} className="input-premium w-full" placeholder="選填" /></div>
             <div className="w-28"><label className="block text-xs text-mist mb-1.5">航廈</label><select className="input-premium w-full text-sm">{airport.includes('桃園')?<><option>T1</option><option>T2</option><option>T3</option></>:<><option>國內</option><option>國際</option></>}</select></div>
           </div>}
