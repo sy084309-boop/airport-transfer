@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\": \"🔴 強制協議 — 動手前先過 4 題：\\nQ1 雙向同步：手機↔本機狀態一致？\\nQ2 先理解再行動：真的懂 BOSS 要什麼？不確定就問！\\nQ3 叫對的人：Nora 派發 → Ray 審查 → Kai 記錄 → Coach 收工\\nQ4 改 A 防 BCD：改 layout→查 submit/calcPrice，改 state→查所有引用，改 JSX→數括號\", \"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"🔴 本專案已記錄 2 次違規。每次開工必須先過 pre-task checklist（見上方 systemMessage），並叫 Nora 派發任務。不准直接寫 code。\"}}'"
+          }
+        ]
+      }
+    ]
+  }
+}
