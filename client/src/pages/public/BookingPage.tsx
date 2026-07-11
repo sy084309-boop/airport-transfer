@@ -20,7 +20,7 @@ export default function BookingPage() {
   const [flightNo,setFlightNo] = useState('');
   const d=new Date();
   const [year,setYear]=useState(d.getFullYear()); const [month,setMonth]=useState(String(d.getMonth()+1).padStart(2,'0')); const [day,setDay]=useState(String(d.getDate()).padStart(2,'0'));
-  const [hour,setHour]=useState('08'); const [minute,setMinute]=useState('00');
+  const [hour,setHour]=useState(()=>String(new Date().getHours()).padStart(2,'0')); const [minute,setMinute]=useState(()=>{const m=new Date().getMinutes();return m<5?'00':String(Math.floor(m/5)*5).padStart(2,'0');});
   const [vehicle,setVehicle]=useState('sedan'); const [passengers,setPassengers]=useState(1); const [luggage,setLuggage]=useState(0);
   const [signboard,setSignboard]=useState(false); const [signboardTitle,setSignboardTitle]=useState(''); const [signboardContent,setSignboardContent]=useState('');
   const [signboard2,setSignboard2]=useState(false); const [signboard2Title,setSignboard2Title]=useState(''); const [signboard2Content,setSignboard2Content]=useState('');
@@ -36,12 +36,6 @@ export default function BookingPage() {
       if (!email && user.email) setEmail(user.email);
     }
   }, [user]);
-
-  useEffect(() => {
-    const now = new Date();
-    setHour(String(now.getHours()).padStart(2, '0'));
-    setMinute(now.getMinutes() < 5 ? '00' : String(Math.floor(now.getMinutes() / 5) * 5).padStart(2, '0'));
-  }, []);
 
   const calcPrice = async () => { if(!dest) return; setCalculating(true); try{ const{data}=await api.post('/pricing/calculate',{vehicleType:vehicle,origin:'taipei',dest:'taoyuan_airport'}); setPrice(data.totalPrice+(signboard?200:0)+(signboard2?200:0)); } catch{setPrice(null)} setCalculating(false); };
 
