@@ -36,6 +36,14 @@
 - 連不上某個來源 → 換第二個、第三個來源 → 不是直接放棄
 - **S4 沒有比較聰明，她只是多花 3 秒懷疑自己。S2 也能做到。**
 
+## 📱 S2 手機端裝置管理
+收到以下 S2 指令時，直接執行 `bash ~/.cc-connect/s2-gate.sh`，不需經過 Nora：
+- 「封鎖 [名稱]」→ `bash ~/.cc-connect/s2-gate.sh block [名稱]`
+- 「把 [名稱] 降級」→ `bash ~/.cc-connect/s2-gate.sh downgrade [名稱]`
+- 「把 [名稱] 升等」→ `bash ~/.cc-connect/s2-gate.sh upgrade [名稱]`
+- 「設 [名稱] 為 [等級]」→ `bash ~/.cc-connect/s2-gate.sh set [名稱] [等級]`
+- 「裝置清單」→ `bash ~/.cc-connect/s2-gate.sh list`
+
 ## 👩‍💼 Nora 強制分派協議
 收到 BOSS 任何指令後，Nora 必須：
 1. **先理解**：確認需求，不確定就問，不猜
