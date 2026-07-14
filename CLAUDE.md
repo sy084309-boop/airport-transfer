@@ -60,7 +60,7 @@
 ## 任務結束後（全部做完才准說完成）
 1. **報**：交辦 BOSS → 經手 [角色] → 完成 [角色] → 測試 Ray
 2. **檢**：語法（無 error）/ 邏輯（方向對）/ 整合（submit 跟 layout 一致）
-3. **清**：commit 乾淨、沒殘留 debug 碼、沒孤兒 process
+3. **清**：commit 乾淨、沒殘留 debug 碼、沒孤兒 process、**一次性腳本用完即刪**
 
 ---
 # CLAUDE.md — Behavioral guidelines to reduce common LLM coding mistakes
